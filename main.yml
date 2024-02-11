@@ -1,0 +1,12 @@
+---
+- name: "Installing pakages on server "
+  hosts: server
+  become: true
+  roles:
+    - nfs_server
+- name: "Installing pakages on client"
+  hosts: client
+  become: true
+  roles:
+    - nfs_client
+    

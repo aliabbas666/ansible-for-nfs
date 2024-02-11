@@ -1,0 +1,16 @@
+---
+# tasks file for nfs_server  hosts: server
+- name: "Installing nfs-utils"
+  yum: name=nfs-utils state=installed
+  #- name: "installing and starting"
+  #  shell: systemctl start nfs-server rpcbind;systemctl enable nfs-server rpcbind
+  notify:
+       - start nfs-server
+       - enable nfs-server
+- name: "Create and and assign permision to directory"
+  shell: mkdir /nfsfileshare;chmod 777 /nfsfileshare/
+- name: "modify export file"
+  shell:  "[ -e /etc/exports ] && echo '/nfsfileshare *(rw,sync,no_root_squash)' > /etc/exports && exportfs -r"
+- name: "configure firewall"
+  shell: firewall-cmd --permanent --add-service mountd;firewall-cmd --permanent --add-service rpc-bind;firewall-cmd --permanent --add-servs;firewall-cmd --reload
+

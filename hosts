@@ -1,0 +1,5 @@
+
+[server]
+10.81.1.61 ansible_port=22 ansible_user=root
+[client]
+10.81.1.62 ansible_port=22 ansible_user=root

@@ -1,0 +1,31 @@
+---
+# tasks file for nfs_client
+- name: "installing nfs-utils"
+  yum: name=nfs-utils state=installed
+- name: "If directory is already avaible will be deleted"
+  stat:
+    path: /mnt/nfsfileshare
+  register: files_to_delete             #groups['server'][0] working but as a json
+- name: "Unmounting if it already exists"
+  mount:
+    path: /mnt/nfsfileshare
+    state: '{{ item }}'
+  with_items:
+    - unmounted
+    - absent
+  when: files_to_delete.stat.exists==true
+- name: "Deleting Directory if it already exists"
+  file:
+    path: /mnt/nfsfileshare
+    state: absent
+  when: files_to_delete.stat.exists==true
+#- set_fact:
+#    ip: "{{ groups['server'][0] }}"
+- name: "creating directory"
+  shell: mkdir /mnt;mkdir /mnt/nfsfileshare;mount 10.81.1.61:/nfsfileshare /mnt/nfsfileshare
+  # shell: mkdir /mnt;mkdir /mnt/nfsfileshare
+
+#  when: files_to_delete.stat.exists==true
+- name: "editing /etc/fstab to mount share on reboot"
+  shell: "[ -e /etc/fstab ] && echo '{{groups['server'][0]}}:/nfsfileshare /mnt/nfsfileshare    nfs     nosuid,rw,sync,hard,intr  0  0' > /etc/stab"
+

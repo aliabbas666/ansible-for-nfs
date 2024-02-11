@@ -1,0 +1,11 @@
+---
+- name: "testing"
+  hosts: server
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Show facts available on the system
+      ansible.builtin.debug:
+        var: ansible_facts
+    - debug: var=ansible_default_ipv4.address
+

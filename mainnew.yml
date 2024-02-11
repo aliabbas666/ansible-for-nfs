@@ -1,0 +1,43 @@
+---
+- name: "Installing pakages on server"
+  hosts: server
+  become: true
+  tasks:
+    - name: "Installing nfs-utils"
+      yum: name=nfs-utils state=installed
+    - name: "installing and starting"
+      shell: systemctl start nfs-server rpcbind;systemctl enable nfs-server rpcbind
+    - name: "Create and and assign permision to directory"
+      shell: mkdir /nfsfileshare;chmod 777 /nfsfileshare/
+    - name: "modify export file"
+      shell:  "[ -e /etc/exports ] && echo '/nfsfileshare *(rw,sync,no_root_squash)' > /etc/exports && exportfs -r" 
+    - name: "configure firewall"
+      shell: firewall-cmd --permanent --add-service mountd;firewall-cmd --permanent --add-service rpc-bind;firewall-cmd --permanent --add-service nfs;firewall-cmd --reload
+- name: "installing on client"
+  hosts: client
+  become: true
+  tasks:
+    - name: "installing nfs-utils"
+      yum: name=nfs-utils state=installed
+    - name: "If directory is already avaible will be deleted"
+      stat:
+        path: /mnt/nfsfileshare
+      register: files_to_delete
+    - name: "Unmounting if it already exists"  
+      # shell: umount /mnt/nfsfilehsare
+      mount: 
+        path: /mnt/nfsfileshare
+        state: '{{ item }}'
+      with_items: 
+        - unmounted
+        - absent
+      when: files_to_delete.stat.exists==true
+    - name: "Deleting Directory if it already exists"
+      file:
+        path: /mnt/nfsfileshare
+        state: absent
+      when: files_to_delete.stat.exists==true
+    - name: "creating directory"
+      shell: mkdir /mnt;mkdir /mnt/nfsfileshare;mount 10.81.1.61:/nfsfileshare /mnt/nfsfileshare
+    - name: "editing /etc/fstab to mount share on reboot"
+      shell: "[ -e /etc/fstab ] && echo '10.81.1.61:/nfsfileshare /mnt/nfsfileshare    nfs     nosuid,rw,sync,hard,intr  0  0' > /etc/stab"
